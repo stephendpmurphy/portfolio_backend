@@ -21,7 +21,7 @@ router.get('/', async(req, res) => {
         res.json(items);
     }
     catch(err) {
-
+        res.status(400);
     }
 });
 
@@ -31,7 +31,7 @@ router.post('/', verifyToken, async(req, res) => {
         // Validate the token
         jwt.verify(req.token, secretkey, (err, data) => {
             if( err ) {
-                resp.status(403).send({msg:"Forbidden: Invalid token"});
+                res.status(403).send({msg:"Forbidden: Invalid token"});
                 return;
             }
         });
@@ -63,7 +63,7 @@ router.put('/:id', verifyToken, async(req, res) => {
         // Validate the token
         jwt.verify(req.token, secretkey, (err, data) => {
             if( err ) {
-                resp.status(403).send({msg:"Forbidden: Invalid token"});
+                res.status(403).send({msg:"Forbidden: Invalid token"});
                 return;
             }
         });
@@ -108,7 +108,7 @@ router.delete('/:id', verifyToken, async(req, res) => {
         // Validate the token
         jwt.verify(req.token, secretkey, (err, data) => {
             if( err ) {
-                resp.status(403).send({msg:"Forbidden: Invalid token"});
+                res.status(403).send({msg:"Forbidden: Invalid token"});
                 return;
             }
         });
@@ -136,7 +136,7 @@ function verifyToken(req, resp, next) {
     }
     else {
         // Forbidden
-        resp.status(403).send({msg:"Forbidden: Invalid token"});
+        res.status(403).send({msg:"Forbidden: Invalid token"});
     }
 }
 
