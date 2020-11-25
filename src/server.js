@@ -22,7 +22,7 @@ app.use(express.json());
 app.use(express.urlencoded({extended: false}));
 app.use(logger);
 // Setup the router
-app.use('/api/skills', require('./api/skills'));
+app.use('/skills', require('./api/skills'));
 
 // Start listening on the specified port and emit a message when we start
 app.listen(PORT, () => console.log(`Server started on port ${PORT}`));
