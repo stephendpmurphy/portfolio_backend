@@ -4,20 +4,23 @@ const Joi = require('@hapi/joi');
 const jwt = require('jsonwebtoken');
 const router = express.Router();
 
-const DB_URI = process.env.MONGODB_URI || 'mongodb://localhost/skills';
+const DB_URI = process.env.MONGODB_URI || 'mongodb://localhost/projects';
 const db = monk(DB_URI);
-const skills = db.get("skills");
+const projects = db.get("projects");
 
 const secretkey = process.env.API_SECRET;
 
 const postSchema = Joi.object({
-    skill: Joi.string().trim().required()
+    name: Joi.string().trim().required(),
+    desc: Joi.string().trim().required(),
+    proj_url: Joi.string().uri().required(),
+    photo_url: Joi.string().uri()
 })
 
 // Get all
 router.get('/', async(req, res) => {
     try {
-        var items = await skills.find({});
+        var items = await projects.find({});
         res.json(items);
     }
     catch(err) {
@@ -37,14 +40,14 @@ router.post('/', verifyToken, async(req, res) => {
         });
 
         // Check if a skill with the same name already exists
-        var exists = await skills.findOne({
-            skill: req.body.skill
+        var exists = await projects.findOne({
+            name: req.body.name
         });
 
         // If it doesn't exist. Add it.
         if( !exists ) {
             var value = await postSchema.validateAsync(req.body);
-            const inserted = await skills.insert(value);
+            const inserted = await projects.insert(value);
             res.json(inserted);
         }
         else {
@@ -76,13 +79,13 @@ router.put('/:id', verifyToken, async(req, res) => {
         if( !value ) res.sendStatus(400).send({msg:"Invalid schema"});
 
         // Check if a skill with the same name already exists
-        var item = await skills.findOne({
+        var item = await projects.findOne({
             _id: id
         });
 
         if( item ) {
             // We found an item with that id.. Let's update it.
-            await skills.update({
+            await projects.update({
                 _id: id
             }, {
                 $set: {
@@ -114,7 +117,7 @@ router.delete('/:id', verifyToken, async(req, res) => {
         });
 
         const { id } = req.params;
-        await skills.remove({ _id: id });
+        await projects.remove({ _id: id });
         res.status(200).send({msg:"Item deleted"});
     }
     catch(err) {
