@@ -24,6 +24,11 @@ app.use(logger);
 // Setup the routers
 app.use('/skills', require('./api/skills'));
 app.use('/projects', require('./api/projects'));
+// Setup error handlers
+app.use((error, req, res, next) => {
+    res.status(400).send({msg:`${error}`})
+    next();
+});
 
 // Start listening on the specified port and emit a message when we start
 app.listen(PORT, () => console.log(`Server started on port ${PORT}`));
