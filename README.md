@@ -1,6 +1,5 @@
 # Personal Portfolio Back-end
-This is my personal portfolio! This project acts as a means of displaying my skills and current projects to the world and to also practice and learn new concepts in Web design! This project uses HTML, JS and SASS. No front-end framework business just yet since I wanted to really learn and hone my Vanilla JS skillz.
-
+This is my personal portfolio backend. This project uses NodeJS and ExpressJS to provide an API endpoint for my portfolio website hosted in Heroku!
 ## Getting Started
 The source can be retrieved from Github.
 ```bash
