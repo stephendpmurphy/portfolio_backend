@@ -15,24 +15,24 @@ const postSchema = Joi.object({
 })
 
 // Get all
-router.get('/', async(req, res) => {
+router.get('/', async(req, res, next) => {
     try {
         var items = await skills.find({});
         res.json(items);
     }
     catch(err) {
-        res.status(400);
+        next(err);
     }
 });
 
 // Add one
-router.post('/', verifyToken, async(req, res) => {
+router.post('/', verifyToken, async(req, res, next) => {
     try {
         // Validate the token
         jwt.verify(req.token, secretkey, (err, data) => {
             if( err ) {
                 res.status(403).send({msg:"Forbidden: Invalid token"});
-                return;
+                next();
             }
         });
 
@@ -53,18 +53,18 @@ router.post('/', verifyToken, async(req, res) => {
         }
     }
     catch(err) {
-        res.sendStatus(400);
+        next(err);
     }
 });
 
 // Update one
-router.put('/:id', verifyToken, async(req, res) => {
+router.put('/:id', verifyToken, async(req, res, next) => {
     try {
         // Validate the token
         jwt.verify(req.token, secretkey, (err, data) => {
             if( err ) {
                 res.status(403).send({msg:"Forbidden: Invalid token"});
-                return;
+                next();
             }
         });
 
@@ -98,33 +98,45 @@ router.put('/:id', verifyToken, async(req, res) => {
         }
     }
     catch {
-        res.sendStatus(400);
+        next(err);
     }
 });
 
 // Delete one
-router.delete('/:id', verifyToken, async(req, res) => {
+router.delete('/:id', verifyToken, async(req, res, next) => {
     try{
         // Validate the token
         jwt.verify(req.token, secretkey, (err, data) => {
             if( err ) {
                 res.status(403).send({msg:"Forbidden: Invalid token"});
-                return;
+                // Move on to the next middleware
+                next();
             }
         });
 
         const { id } = req.params;
-        await skills.remove({ _id: id });
-        res.status(200).send({msg:"Item deleted"});
+
+        // Find the item we are wanting to delete
+        var item = await projects.findOne({
+            _id: id
+        })
+
+        if( item ) {
+            // Now that we found it, remove it.
+            await projects.remove({ _id: id });
+            res.status(200).send({msg:"Item deleted"});
+        }
+        else {
+            res.status(400).send({msg:`Could not find a skill with an id of ${id}`})
+        }
     }
     catch(err) {
-        res.status(400);
+        next(err);
     }
 });
 
-
 // Verify the token exists in the req header
-function verifyToken(req, resp, next) {
+function verifyToken(req, res, next) {
     // Get the auth header value
     const bearerToken = req.headers['authorization'];
 
