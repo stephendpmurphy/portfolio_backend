@@ -1,159 +1,62 @@
 const express = require('express');
-const monk = require('monk');
-const Joi = require('@hapi/joi');
-const jwt = require('jsonwebtoken');
+const axios = require('axios');
 const router = express.Router();
 
-const DB_URI = process.env.MONGODB_URI || 'mongodb://localhost/projects';
-const db = monk(DB_URI);
-const projects = db.get("projects");
-
-const secretkey = process.env.API_SECRET;
-
-const postSchema = Joi.object({
-    name: Joi.string().trim().required(),
-    desc: Joi.string().trim().required(),
-    tags: Joi.array().items(Joi.string().trim()).required(),
-    proj_url: Joi.string().uri().required(),
-    photo_url: Joi.string().uri()
-})
+const secretkey = process.env.GITHUB_API_SECRET;
 
 // Get all
-router.get('/', async(req, res) => {
+router.get('/', async(req, res, next) => {
     try {
-        var items = await projects.find({});
-        res.json(items);
-    }
-    catch(err) {
-        next(err);
-    }
-});
-
-// Add one
-router.post('/', verifyToken, async(req, res, next) => {
-    try {
-        // Validate the token
-        jwt.verify(req.token, secretkey, (err, data) => {
-            if( err ) {
-                res.status(403).send({msg:"Forbidden: Invalid token"});
-                // Move on to the next middleware
-                next();
-            }
-        });
-
-        // Check if a skill with the same name already exists
-        var exists = await projects.findOne({
-            name: req.body.name
-        });
-
-        // If it doesn't exist. Add it.
-        if( !exists ) {
-            var value = await postSchema.validateAsync(req.body);
-            const inserted = await projects.insert(value);
-            res.json(inserted);
-        }
-        else {
-            // The item already exists. Return it in the response
-            res.status(400).send({ msg:"Project already exists.", project: exists});
-        }
-    }
-    catch(err) {
-        next(err);
-    }
-});
-
-// Update one
-router.put('/:id', verifyToken, async(req, res, next) => {
-    try {
-        // Validate the token
-        jwt.verify(req.token, secretkey, (err, data) => {
-            if( err ) {
-                res.status(403).send({msg:"Forbidden: Invalid token"});
-                // Move on to the next middleware
-                next();
-            }
-        });
-
-        // Validate the incoming body
-        const { id } = req.params;
-        const value = await postSchema.validateAsync(req.body);
-
-        // Send back a 400 if the schema is incorrect
-        if( !value ) res.status(400).send({msg:"Invalid schema"});
-
-        // Find the item we are wanting to update
-        var item = await projects.findOne({
-            _id: id
+        const oauth = {"Authorization": "bearer " + secretkey};
+        const query = `{
+                            user(login:"stephendpmurphy") {
+                                pinnedItems(first: 6, types: [REPOSITORY]) {
+                                    totalCount
+                                    edges {
+                                        node {
+                                            ... on Repository {
+                                                name,
+                                                description,
+                                                url,
+                                                repositoryTopics(first: 5) {
+                                                    totalCount
+                                                    edges {
+                                                        node {
+                                                            topic {
+                                                                name
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }`
+        const { data } = await axios.post('https://api.github.com/graphql', {query: query}, {headers: oauth})
+        const projects = data.data.user.pinnedItems.edges.map( (i) => {
+            // For every project we get back from Github, We want to return an object containing the name, url, and array of topics
+            return {
+                        name: i.node.name,
+                        description: i.node.description,
+                        url: i.node.url,
+                        topics: i.node.repositoryTopics.edges.map( (n) => {
+                            return n.node.topic.name;
+                        })
+                    }
         })
 
-        if( item ) {
-            // We found an item with that id.. Let's update it.
-            await projects.update({
-                _id: id
-            }, {
-                $set: value
-            });
-
-            // Respond with the updated object
-            res.json(value);
+        if( projects.length ) {
+            res.json(projects);
         }
         else {
-            res.status(400).send({msg:`Could not find a project with an id of ${id}`})
+            res.status(400);
         }
     }
     catch(err) {
         next(err);
     }
 });
-
-// Delete one
-router.delete('/:id', verifyToken, async(req, res, next) => {
-    try{
-        // Validate the token
-        jwt.verify(req.token, secretkey, (err, data) => {
-            if( err ) {
-                res.status(403).send({msg:"Forbidden: Invalid token"});
-                // Move on to the next middleware
-                next();
-            }
-        });
-
-        const { id } = req.params;
-
-        // Find the item we are wanting to delete
-        var item = await projects.findOne({
-            _id: id
-        })
-
-        if( item ) {
-            // Now that we found it, remove it.
-            await projects.remove({ _id: id });
-            res.status(200).send({msg:"Item deleted"});
-        }
-        else {
-            res.status(400).send({msg:`Could not find a project with an id of ${id}`})
-        }
-    }
-    catch(err) {
-        next(err);
-    }
-});
-
-// Verify the token exists in the req header
-function verifyToken(req, res, next) {
-    // Get the auth header value
-    const bearerToken = req.headers['authorization'];
-
-    if( typeof(bearerToken) !== 'undefined' ) {
-        // Set the token
-        req.token = bearerToken;
-        // Move onto the next middleware
-        next();
-    }
-    else {
-        // Forbidden
-        res.status(403).send({msg:"Forbidden: Token required."});
-    }
-}
 
 module.exports = router;

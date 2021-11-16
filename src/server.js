@@ -22,7 +22,6 @@ app.use(express.json());
 app.use(express.urlencoded({extended: false}));
 app.use(logger);
 // Setup the routers
-app.use('/skills', require('./api/skills'));
 app.use('/projects', require('./api/projects'));
 // Setup error handlers
 app.use((error, req, res, next) => {
