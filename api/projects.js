@@ -1,11 +1,9 @@
-const app = require('express')();
 const axios = require('axios');
 
 const secretkey = process.env.GITHUB_API_SECRET;
 
 // Get all
-app.get('/projects', async(req, res, next) => {
-    console.log("req rcvd!")
+export default async (req, res) => {
     try {
         const oauth = {"Authorization": "bearer " + secretkey};
         const query = `{
@@ -50,7 +48,7 @@ app.get('/projects', async(req, res, next) => {
         console.log(projects);
 
         if( projects.length ) {
-            res.setHeader('Content-Type', 'text/html');
+            res.setHeader('Content-Type', 'application/json');
             res.setHeader('Cache-Control', 's-max-age=1, stale-while-revalidate');
             res.json(projects);
         }
@@ -59,8 +57,6 @@ app.get('/projects', async(req, res, next) => {
         }
     }
     catch(err) {
-        next(err);
+        res.status(500)
     }
-});
-
-module.exports = app;
+};
