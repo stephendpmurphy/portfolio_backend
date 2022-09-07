@@ -1,9 +1,5 @@
 {
     "version": 2,
     "installCommand": "npm install",
-    "functions": {
-        "api/server.js": {
-            "includeFiles": "api/**/*.js"
-        }
-    }
+    "rewrites": [{ "source": "/api/(.*)", "destination": "/api" }]
 }
