@@ -1,10 +1,10 @@
-const express = require('express');
+const app = require('express')();
 const axios = require('axios');
 
 const secretkey = process.env.GITHUB_API_SECRET;
 
 // Get all
-express.get('/projects', async(req, res, next) => {
+app.get('/projects', async(req, res, next) => {
     try {
         const oauth = {"Authorization": "bearer " + secretkey};
         const query = `{
@@ -60,4 +60,4 @@ express.get('/projects', async(req, res, next) => {
     }
 });
 
-module.exports = express;
+module.exports = app;
