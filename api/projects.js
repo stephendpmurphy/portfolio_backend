@@ -5,6 +5,7 @@ const secretkey = process.env.GITHUB_API_SECRET;
 
 // Get all
 app.get('/projects', async(req, res, next) => {
+    console.log("req rcvd!")
     try {
         const oauth = {"Authorization": "bearer " + secretkey};
         const query = `{
@@ -45,6 +46,8 @@ app.get('/projects', async(req, res, next) => {
                         })
                     }
         })
+
+        console.log(projects);
 
         if( projects.length ) {
             res.setHeader('Content-Type', 'text/html');
