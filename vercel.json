@@ -3,7 +3,7 @@
     "installCommand": "npm install",
     "functions": {
         "api/server.js": {
-            "runtime": "node.js",
+            "runtime": "node.js@>16.0.0",
             "includeFiles": "api/**/*.js"
         }
     }
