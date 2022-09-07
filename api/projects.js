@@ -1,11 +1,10 @@
 const express = require('express');
 const axios = require('axios');
-const router = express.Router();
 
 const secretkey = process.env.GITHUB_API_SECRET;
 
 // Get all
-router.get('/', async(req, res, next) => {
+express.get('/projects', async(req, res, next) => {
     try {
         const oauth = {"Authorization": "bearer " + secretkey};
         const query = `{
@@ -48,6 +47,8 @@ router.get('/', async(req, res, next) => {
         })
 
         if( projects.length ) {
+            res.setHeader('Content-Type', 'text/html');
+            res.setHeader('Cache-Control', 's-max-age=1, stale-while-revalidate');
             res.json(projects);
         }
         else {
@@ -59,4 +60,4 @@ router.get('/', async(req, res, next) => {
     }
 });
 
-module.exports = router;
+module.exports = express;
