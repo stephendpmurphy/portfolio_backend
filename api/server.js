@@ -22,7 +22,7 @@ app.use(express.json());
 app.use(express.urlencoded({extended: false}));
 app.use(logger);
 // Setup the routers
-app.use('/projects', require('./api/projects'));
+app.use('/projects', require('./projects/projects'));
 // Setup error handlers
 app.use((error, req, res, next) => {
     res.status(400).send({msg:`${error}`})

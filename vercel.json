@@ -1,15 +1,10 @@
 {
     "version": 2,
-    "builds": [
-        {
-            "src": "./src/server.js",
-            "use": "@vercel/node"
+    "installCommand": "npm install",
+    "functions": {
+        "api/server.js": {
+            "runtime": "node.js",
+            "includeFiles": "api/**/*.js"
         }
-    ],
-    "routes": [
-        {
-            "src": "/(.*)",
-            "dest": "/"
-        }
-    ]
+    }
 }
